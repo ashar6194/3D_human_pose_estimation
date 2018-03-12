@@ -12,4 +12,4 @@ Generate your TFRecords using `tfrecorder.py`. Make sure the dataset is download
 
 Once you have your TFRecords, train SegNet with `python train.py`. Analogously, test it with `python test.py`.
 
-Also, the regression pipeline for both of the above datasets are written in MATLAB, and will be up in a separate repo shortly.
+Also, the regression pipeline for both of the above datasets are written in MATLAB, and will be up in a separate repo shortly. In case of any questions, drop me an email at `ashar.ali@gatech.edu`
