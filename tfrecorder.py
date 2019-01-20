@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 import config
 
-
+tf.app.flags.DEFINE_string('dataset', 'UBC_hard', 'Output data Train Sub-directory')
 tf.app.flags.DEFINE_string('output_trn', 'Train', 'Output data Train Sub-directory')
 tf.app.flags.DEFINE_integer('train_shards', 1, 'Number of shards in training TFRecord files')
 tf.app.flags.DEFINE_integer('test_shards', 1, 'Number of shards in test TFRecord files')
@@ -157,30 +157,44 @@ def _train_process(main_dir, output_directory):
     os.makedirs(output_directory)
 
 # parser for UBC easy data
-  if config.working_dataset == 'UBC_easy':
+  if FLAGS.dataset == 'UBC_easy' or FLAGS.dataset == 'UBC_medium' or FLAGS.dataset == 'UBC_hard':
+
+    if FLAGS.dataset == 'UBC_hard':
+      train_set = 60
+      valid_set = 19
+    else:
       train_set = 180
-      cam_range = 3
-      path_dictionary = {'train': [], 'val': [], 'test': []}
-      error_dictionary = {'train': [], 'val': [], 'test': []}
-      for a in range(1, train_set + 1):
-          for b in range(1, cam_range + 1):
-              strname = 'train%d_Cam%d' % (a, b)
-              strdir = os.path.join(main_dir, 'train/%d/images/depthRender/Cam%d' % (a, b))
-              strdir_lbl = os.path.join(main_dir, 'train/%d/images/groundtruth/Cam%d' % (a, b))
-              op_file = os.path.join(output_directory, '%s.tfrecords' % strname)
-              try:
-                  _process_dataset(strname, strdir, strdir_lbl,  output_directory, FLAGS.train_shards)
-                  path_dictionary['train'].append(op_file)
-              except:
-                  error_dictionary['train'].append(op_file)
-              print ('Converting Train Example Number: %d, Camera %d' % (a, b))
+      valid_set = 60
+    cam_range = 3
+    path_dictionary = {'train': [], 'val': [], 'test': []}
+    error_dictionary = {'train': [], 'val': [], 'test': []}
+    # for a in range(1, train_set + 1):
+        # for b in range(1, cam_range + 1):
+        #     strname = 'train%d_Cam%d' % (a, b)
+        #     strdir = os.path.join(main_dir, 'train/%d/images/depthRender/Cam%d' % (a, b))
+        #     strdir_lbl = os.path.join(main_dir, 'train/%d/images/groundtruth/Cam%d' % (a, b))
+        #     op_file = os.path.join(output_directory, '%s.tfrecords' % strname)
+        #     try:
+        #         _process_dataset(strname, strdir, strdir_lbl,  output_directory, FLAGS.train_shards)
+        #         path_dictionary['train'].append(op_file)
+        #     except:
+        #         error_dictionary['train'].append(op_file)
+        #     print ('Converting Train Example Number: %d, Camera %d' % (a, b))
 
-      with open('training_data_ubc.json', 'w') as outfile:
-          json.dump(path_dictionary, outfile)
-      with open('exception_ubc.json', 'w') as outfile2:
-          json.dump(error_dictionary, outfile2)
+    for a in range(1, valid_set + 1):
+      for b in range(1, cam_range + 1):
+        strname = 'valid%d_Cam%d' % (a, b)
+        strdir = os.path.join(main_dir, 'valid/%d/images/depthRender/Cam%d' % (a, b))
+        strdir_lbl = os.path.join(main_dir, 'valid/%d/images/groundtruth/Cam%d' % (a, b))
+        op_file = os.path.join(output_directory, '%s.tfrecords' % strname)
+        try:
+          _process_dataset(strname, strdir, strdir_lbl, output_directory, FLAGS.train_shards)
+          path_dictionary['val'].append(op_file)
+        except:
+          error_dictionary['val'].append(op_file)
+        print ('Converted Validation Example Number: %d, Camera %d' % (a, b))
 
-  if config.working_dataset == 'forced_UBC_easy':
+  if FLAGS.dataset == 'forced_UBC_easy':
       train_set = 60
       valid_set = 19
       cam_range = 3
@@ -218,7 +232,7 @@ def _train_process(main_dir, output_directory):
           json.dump(error_dictionary, outfile2)
 
 # parser for Berkeley data
-  if config.working_dataset == 'MHAD':
+  if FLAGS.dataset == 'MHAD':
       cameras = 2
       subjects = 3
       actions = 11
@@ -247,27 +261,87 @@ def _train_process(main_dir, output_directory):
       with open('error_mhad_fitted_planev2.json', 'w') as outfile2:
           json.dump(error_dictionary, outfile2)
 
+  if FLAGS.dataset == 'MHAD_UBC':
+      train_set = 60
+      valid_set = 19
+      cam_range = 3
+      path_dictionary = {'train': [], 'valid': [], 'test': []}
+      error_dictionary = {'train': [], 'valid': [], 'test': []}
+      for a in range(1, train_set + 1):
+          for b in range(1, cam_range + 1):
+              strname = 'train%d_Cam%d' % (a, b)
+              strdir = os.path.join(main_dir, 'train/%d/images/depthRender/Cam%d' % (a, b))
+              strdir_lbl = os.path.join(main_dir, 'train/%d/images/interpol_groundtruth/Cam%d' % (a, b))
+              op_file = os.path.join(output_directory, '%s.tfrecords' % strname)
+              try:
+                _process_dataset(strname, strdir, strdir_lbl, output_directory, FLAGS.train_shards)
+                path_dictionary['train'].append(op_file)
+                print ('Converted Train Example Number: %d, Camera %d' % (a, b))
+              except:
+                error_dictionary['train'].append(op_file)
+
+      for a in range(1, valid_set + 1):
+          for b in range(1, cam_range + 1):
+              strname = 'valid%d_Cam%d' % (a, b)
+              strdir = os.path.join(main_dir, 'valid/%d/images/depthRender/Cam%d' % (a, b))
+              strdir_lbl = os.path.join(main_dir, 'valid/%d/images/interpol_groundtruth/Cam%d' % (a, b))
+              op_file = os.path.join(output_directory, '%s.tfrecords' % strname)
+              try:
+                  _process_dataset(strname, strdir, strdir_lbl, output_directory, FLAGS.train_shards)
+                  path_dictionary['valid'].append(op_file)
+                  print ('Converted Train Example Number: %d, Camera %d' % (a, b))
+              except:
+                  error_dictionary['valid'].append(op_file)
+
+      with open('./json/training_data_mhad_ubc_hard.json', 'a') as outfile:
+          json.dump(path_dictionary, outfile)
+      with open('./json/exception_mhad_ubc_hard.json', 'a') as outfile2:
+          json.dump(error_dictionary, outfile2)
+
 
 def main(unused_argv):
     main_dir_mhad = '/media/mcao/Miguel/MHAD_fitted_plane/Kinect/'
     main_dir_ubc = '/media/mcao/Miguel/input/UBC_easy/'
 
-    if config.working_dataset == 'UBC_easy':
+    print 'Running for the dataset  = ' + FLAGS.dataset
+
+    if FLAGS.dataset == 'UBC_easy':
       main_dir = main_dir_ubc
       tfrecord_path = 'TFrecords'
       output_directory = os.path.join(main_dir, tfrecord_path, FLAGS.output_trn)
       _train_process(main_dir, output_directory)
 
-    elif config.working_dataset == 'MHAD':
+    elif FLAGS.dataset == 'UBC_medium':
+      main_dir_ubc = '/media/mcao/Miguel/UBC_medium/'
+      main_dir = main_dir_ubc
+      tfrecord_path = 'TFrecords'
+      output_directory = os.path.join(main_dir, tfrecord_path, FLAGS.output_trn)
+      _train_process(main_dir, output_directory)
+
+    elif FLAGS.dataset == 'UBC_hard':
+      main_dir_ubc = '/media/mcao/Miguel/UBC_hard/'
+      main_dir = main_dir_ubc
+      tfrecord_path = 'TFrecords'
+      output_directory = os.path.join(main_dir, tfrecord_path, FLAGS.output_trn)
+      _train_process(main_dir, output_directory)
+
+    elif FLAGS.dataset == 'MHAD':
       main_dir = main_dir_mhad
       tfrecord_path = 'TFrecords_fittedplane'
       output_directory = os.path.join(main_dir, tfrecord_path, FLAGS.output_trn)
       _train_process(main_dir, output_directory)
 
-    elif config.working_dataset == 'forced_UBC_easy':
+    elif FLAGS.dataset == 'forced_UBC_easy':
       main_dir_ubc = '/media/mcao/Miguel/UBC_hard/'
       main_dir = main_dir_ubc
       tfrecord_path = 'Forced_TFrecords'
+      output_directory = os.path.join(main_dir, tfrecord_path, FLAGS.output_trn)
+      _train_process(main_dir, output_directory)
+
+    elif FLAGS.dataset == 'UBC_interpolated':
+      main_dir_ubc = '/media/mcao/Miguel/UBC_hard/'
+      main_dir = main_dir_ubc
+      tfrecord_path = 'MHAD_learned_TFrecords'
       output_directory = os.path.join(main_dir, tfrecord_path, FLAGS.output_trn)
       _train_process(main_dir, output_directory)
 

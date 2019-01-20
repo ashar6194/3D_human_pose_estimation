@@ -21,8 +21,9 @@ def frequency_balanced_weights(median_frequency, ba1=[]):
 
 
 data_flag_UBC = False
-data_flag_forced_UBC = True
+data_flag_forced_UBC = False
 data_flag_MHAD = False
+data_flag_UBC_interpolated = True
 first_iter = True
 
 if data_flag_UBC:
@@ -69,6 +70,49 @@ if data_flag_UBC:
     f1.close()
 
 
+if data_flag_UBC_interpolated:
+    train_set = 60
+    cam_range = 3
+    list_config = config.colors['UBC_interpolated']
+    freq = []
+    for a in range(1, train_set + 1):
+        if not a == 6:
+            for b in range(1, cam_range + 1):
+                for c in range(0, 1001):
+                    image = cv.imread(
+                        '/media/mcao/Miguel/UBC_hard/train/%d/images/interpol_groundtruth/Cam%d/mayaProject.%06d.png'
+                        % (a, b, (c + 1)))
+
+                    qwe = np.array(image).sum(axis=2)
+                    itemidx = np.where(qwe.sum(axis=0) != 0)
+                    itemidy = np.where(qwe.sum(axis=1) != 0)
+                    cropped_image = image[min(itemidy[0]):max(itemidy[0]), min(itemidx[0]):max(itemidx[0]), :]
+                    qqq = cv.resize(cropped_image, (224, 224), interpolation=cv.INTER_NEAREST)
+
+                    np_image = np.array(qqq)
+                    if first_iter:
+                        print 'Job is done'
+                        for color in list_config:
+                            freq.append(np_image[(np_image == color)].shape[0]/3)
+                            # print color, np_image[(np_image == color)].shape[0]/3
+                        first_iter = False
+                    else:
+                        for i in range(0, 30):
+                            freq[i] += np_image[(np_image == list_config[i])].shape[0]/3
+                print 'Step %d ' % a, 'Camera %d ' % b, max(freq)
+
+    print freq
+    list_a = list(freq)
+    list_wt = list(freq)
+
+    median_frequency = median_freq(list_a)
+    weights = frequency_balanced_weights(median_frequency, list_wt)
+    print freq, '\n', weights, median_frequency
+    with open('frequencies_UBC_interpolated.txt', 'wb') as f1:
+        for item in weights:
+            f1.write("%s\n" % item)
+    f1.close()
+
 if data_flag_forced_UBC:
     train_set = 60
     cam_range = 3
@@ -77,7 +121,7 @@ if data_flag_forced_UBC:
     for a in range(1, train_set + 1):
         if not a == 6:
             for b in range(1, cam_range + 1):
-                for c in range(0, 10):
+                for c in range(0, 1001):
                     image = cv.imread(
                         '/media/mcao/Miguel/UBC_hard/train/%d/images/forced_groundtruth/Cam%d/mayaProject.%06d.png'
                         % (a, b, (c + 1)))
@@ -98,7 +142,7 @@ if data_flag_forced_UBC:
                     else:
                         for i in range(0, 19):
                             freq[i] += np_image[(np_image == list_config[i])].shape[0]/3
-                    print 'Step %d ' % a, 'Camera %d ' % b, max(freq)
+                print 'Step %d ' % a, 'Camera %d ' % b, max(freq)
 
     print freq
     list_a = list(freq)
@@ -107,7 +151,7 @@ if data_flag_forced_UBC:
     median_frequency = median_freq(list_a)
     weights = frequency_balanced_weights(median_frequency, list_wt)
     print freq, '\n', weights, median_frequency
-    with open('frequencies_forced_UBC_hard.txt', 'wb') as f1:
+    with open('frequencies_forced_UBC_hard_sanity.txt', 'wb') as f1:
         for item in weights:
             f1.write("%s\n" % item)
     f1.close()

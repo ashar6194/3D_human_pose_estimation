@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def conv(x, receptive_field_shape, channels_shape, stride, name, repad=False):
   kernel_shape = receptive_field_shape + channels_shape
   bias_shape = [channels_shape[-1]]
@@ -49,3 +50,7 @@ def unpool(x, size):
   ret = tf.reshape(out, tf.stack([-1, shv[1] * size, shv[2] * size, sh[3]]))
   ret.set_shape([None, None, None, sh[3]])
   return ret
+
+
+def concat_layers(x1, x2):
+  return tf.concat([x1, x2], 3)

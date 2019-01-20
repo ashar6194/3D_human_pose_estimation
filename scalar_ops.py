@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 import config
 
-
 str_file_name = config.get_str_file_name(config.working_dataset)
 with open(str_file_name, 'rb') as f2:
     med_freq_bal = np.float32(([l.strip() for l in f2]))
@@ -42,3 +41,4 @@ def loss(logits, labels):
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels)
     weighted_losses = cross_entropy * weights
     return tf.reduce_mean(weighted_losses, name='loss')
+
