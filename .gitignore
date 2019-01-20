@@ -1,0 +1,16 @@
+__pycache__/
+ckpts/
+input/
+logs/
+ckpts_MHAD/
+dense-depth-body-parts/
+.idea/
+
+*.index
+*.meta
+*.png
+*.
+
+*.mat
+*.pyc
+vgg16_weights.npz
