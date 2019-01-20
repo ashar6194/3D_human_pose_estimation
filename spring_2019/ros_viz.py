@@ -7,7 +7,6 @@ import cv2
 
 from ubc_args import args
 
-from std_msgs.msg import String
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
 from std_msgs.msg import Header, ColorRGBA
