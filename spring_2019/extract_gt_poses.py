@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # import tensorflow as tf
 from scipy import io
+from ubc_args import args
 import glob
 import time
 
-root_dir = '/media/mcao/Miguel/UBC_hard/train/'
+root_dir = args.root_dir
 #
 # joint_names = ['HeadPGX','HipsPGX', 'LeftArmPGX', 'LeftFingerBasePGX', 'LeftFootPGX', 'LeftForeArmPGX', 'LeftHandPGX','LeftInHandIndexPGX',
 #                'LeftInHandThumbPGX', 'LeftLegPGX', 'LeftShoulderPGX', 'LeftToeBasePGX', 'LeftUpLegPGX','Neck1PGX', 'NeckPGX','RightArmPGX',
@@ -54,7 +55,6 @@ def main():
 
       joints = np.array([mat_file['joints'][0][idx][0][0][jnt_idx][0][12:15] for jnt_idx in useful_jnt_idx])
       pose_list.append(joints)
-
 
     pickle.dump(np.array(pose_list), open('%s%s/gt_poses.pkl' % (root_dir, vid_idx), 'wb'))
     # print time.time() - aa

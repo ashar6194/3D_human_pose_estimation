@@ -13,8 +13,7 @@ from ubc_args import args
 class DataGenerator(keras.utils.Sequence):
 
     def __init__(self, list_ids, batch_size=10, dim=(10, 16, 2),
-                 dim_visual=(10, 16, 565), num_actions=3, shuffle=True,
-                 dim_loc=(10, 3), dim_ego=(10, 6), time_steps=10, flag_data='flow_kron', num_blocks=1):
+                 dim_visual=(10, 16, 565), num_actions=3, shuffle=True, flag_data='flow_kron'):
 
         self.dim = dim
         self.num_actions = num_actions
@@ -49,33 +48,28 @@ class DataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.indexes)
 
     def __data_generation_kron(self, list_ids_temp, feature_dir):
-        X = np.empty((self.batch_size, 100, 100, 3))
-        y = np.empty((self.batch_size, 18, 3), dtype=float)
+        X = np.empty((self.batch_size, 100, 100, 3), dtype=np.float16)
+        y = np.empty((self.batch_size, 54), dtype=np.float16)
         # y = [[None]] * self.batch_size
 
         for idx, id_name in enumerate(list_ids_temp):
           img = cv2.imread(id_name)
           img = cv2.resize(img, (100, 100))
-          X[idx, ] = img
+          X[idx, ] = img.astype(np.float16)
           name_parse = id_name.split('/')
-
           img_idx = int(name_parse[-1].split('.')[1]) - 1
           vid_idx = name_parse[-5]
           gt_file = '%s%s/gt_poses.pkl' % (feature_dir, vid_idx)
-
           gt_pose = pickle.load(open(gt_file, 'r'))[img_idx, ]
+          gt_pose = np.reshape(gt_pose, (-1, )).astype(np.float16)
           y[idx, ] = gt_pose
 
         return X, y
 
 
 if __name__ == '__main__':
-  # a = '/media/mcao/Miguel/UBC_hard/train/1/images/depthRender'
-  img_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.root_dir))
-  print len(img_list)
-  # list_ids = pickle.load(open(list_id_file, 'rb'))
 
+  img_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.root_dir))
   qwe = DataGenerator(img_list, flag_data='flow_kron', batch_size=32)
   a, b = qwe.__getitem__(0)
-  # print a, b
-  print a[0].shape, b[0].shape
+  print a[0].dtype, b[0].shape
