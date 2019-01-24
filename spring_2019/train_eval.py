@@ -1,4 +1,5 @@
 import keras
+import os
 import h5py
 import glob
 import numpy as np
@@ -13,17 +14,21 @@ from keras.callbacks import TensorBoard, LearningRateScheduler, ModelCheckpoint
 
 if __name__ == '__main__':
 
-  ckpt_dir = args.root_dir + 'keras_models/'
+  ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
+  if not os.path.exists(ckpt_dir):
+    os.makedirs(ckpt_dir)
 
-  inp_shape = (100, 100, 3)
+  inp_shape = (args.input_size, args.input_size, 3)
 
-  img_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.root_dir))
-  tdg = DataGenerator(img_list, flag_data='flow_kron', batch_size=1)
+  img_train_list = sorted(glob.glob('%s*/images/depthRender/*/*.png' % args.root_dir))
+  img_test_list = sorted(glob.glob('%s*/images/depthRender/*/*.png' % args.test_dir))
+  train_dg = DataGenerator(img_train_list, batch_size=args.batch_size)
+  test_dg = DataGenerator(img_test_list, batch_size=args.batch_size)
 
   model = build_ddp_basic(inp_shape, num_classes=54)
-  model.compile(loss=losses.mean_absolute_error, optimizer='sgd', metrics=['accuracy'])
-  # compile_network(model)
-  model.fit_generator(generator=tdg, epochs=1, verbose=1)
+  # model.compile(loss=losses.mean_absolute_error, optimizer='Adam', metrics=['accuracy'])
+  compile_network(model)
+  model.fit_generator(generator=train_dg, epochs=3, verbose=1, validation_data=test_dg)
 
   # use_multiprocessing=True, workers=4,
 

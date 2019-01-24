@@ -34,7 +34,7 @@ def build_ddp_basic(input_shape, num_classes=54):
 
 def compile_network(model):
   # optim_adam = optimizers.Adam(lr=0.001)
-  model.compile(loss='mean_squared_error', optimizers='sgd', metrics=['accuracy'])
+  model.compile(loss='mae', optimizer='sgd')
 
 
 if __name__== '__main__':

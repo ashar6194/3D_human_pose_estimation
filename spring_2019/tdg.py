@@ -5,7 +5,7 @@ import numpy as np
 import os
 import keras
 import cv2
-
+import time
 # Change argument source file based on the dataset
 from ubc_args import args
 
@@ -13,7 +13,7 @@ from ubc_args import args
 class DataGenerator(keras.utils.Sequence):
 
     def __init__(self, list_ids, batch_size=10, dim=(10, 16, 2),
-                 dim_visual=(10, 16, 565), num_actions=3, shuffle=True, flag_data='flow_kron'):
+                 dim_visual=(10, 16, 565), num_actions=3, shuffle=True, flag_data='base_depth'):
 
         self.dim = dim
         self.num_actions = num_actions
@@ -37,7 +37,7 @@ class DataGenerator(keras.utils.Sequence):
         list_IDs_temp = [self.list_ids[k] for k in indexes]
 
         # Generate data
-        if self.flag_data == 'flow_kron':
+        if self.flag_data == 'base_depth':
             X, y = self.__data_generation_kron(list_IDs_temp, feature_dir=args.root_dir)
 
         return X, y
@@ -48,13 +48,16 @@ class DataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.indexes)
 
     def __data_generation_kron(self, list_ids_temp, feature_dir):
-        X = np.empty((self.batch_size, 100, 100, 3), dtype=np.float16)
+        X = np.empty((self.batch_size, args.input_size, args.input_size, 3), dtype=np.float16)
         y = np.empty((self.batch_size, 54), dtype=np.float16)
         # y = [[None]] * self.batch_size
 
         for idx, id_name in enumerate(list_ids_temp):
           img = cv2.imread(id_name)
-          img = cv2.resize(img, (100, 100))
+
+          # aa = time.time()
+          img = cv2.resize(img, (args.input_size, args.input_size))
+          # print time.time() - aa
           X[idx, ] = img.astype(np.float16)
           name_parse = id_name.split('/')
           img_idx = int(name_parse[-1].split('.')[1]) - 1

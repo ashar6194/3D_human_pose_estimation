@@ -10,6 +10,8 @@ from scipy import io
 from ubc_args import args
 import glob
 import time
+from sklearn.cluster import KMeans
+
 
 root_dir = args.root_dir
 #
@@ -26,6 +28,31 @@ root_dir = args.root_dir
 #   fig = plt.figure(1)
 #   ax = fig.add_subplot(111, projection='3d')
 #   ax.scatter(pose_array[:, 0], pose_array[:, 1], pose_array[:, 2])
+
+def clustering_pipeline(args):
+  root_dir = args.root_dir
+  instance_list = glob.glob('%s*/groundtruth.mat' % root_dir)
+  pose_array = []
+
+  for instance in tqdm(sorted(instance_list)):
+    vid_idx = instance.split('/')[-2]
+    pose_set = pickle.load(open('%s%s/gt_poses.pkl' % (root_dir, vid_idx), 'rb'))
+    pose_array.append(pose_set)
+
+  pose_array = np.array(pose_array).reshape((-1, 18, 3)).reshape((-1, 54))
+  print pose_array.shape
+
+  kmeans = KMeans(n_clusters=100, random_state=2, verbose=1, n_init=3)
+  kmeans.fit(pose_array)
+
+  pose_centroids = kmeans.cluster_centers_.reshape((-1, 18, 3))
+
+  print pose_centroids.shape
+  pickle.dump(pose_centroids, open('pose_centroids.pkl', 'wb'))
+
+
+
+
 
 
 def main():
@@ -61,4 +88,5 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  # main()
+  clustering_pipeline(args)
