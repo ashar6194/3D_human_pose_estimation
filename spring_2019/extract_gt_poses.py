@@ -51,8 +51,18 @@ def clustering_pipeline(args):
   pickle.dump(pose_centroids, open('pose_centroids.pkl', 'wb'))
 
 
+def find_train_stats(args):
+  root_dir = args.root_dir
+  instance_list = glob.glob('%s*/groundtruth.mat' % root_dir)
+  pose_array = []
 
+  for instance in tqdm(sorted(instance_list)):
+    vid_idx = instance.split('/')[-2]
+    pose_set = pickle.load(open('%s%s/gt_poses.pkl' % (root_dir, vid_idx), 'rb'))
+    pose_array.append(pose_set)
 
+  pose_array = np.array(pose_array).reshape((-1, 18, 3)).reshape((-1, 54))
+  print pose_array.shape
 
 
 def main():
@@ -89,4 +99,5 @@ def main():
 
 if __name__ == '__main__':
   # main()
-  clustering_pipeline(args)
+  # clustering_pipeline(args)
+  find_train_stats(args)

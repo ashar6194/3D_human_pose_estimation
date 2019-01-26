@@ -8,6 +8,9 @@ parser.add_argument('--root_dir', default='/media/mcao/Miguel/UBC_hard/train/', 
 parser.add_argument('--test_dir', default='/media/mcao/Miguel/UBC_hard/test/', type=str,
                     help='THe root training directory for parsing stuff')
 
+parser.add_argument('--show_td', default=True, type=bool,
+                    help='THe root training directory for parsing stuff')
+
 parser.add_argument('--batch_size', default=16, type=int, help='THe root training directory for parsing stuff')
 
 parser.add_argument('--num_epochs', default=2, type=int, help='THe root training directory for parsing stuff')

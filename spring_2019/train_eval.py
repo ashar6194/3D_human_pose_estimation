@@ -25,7 +25,7 @@ if __name__ == '__main__':
   train_dg = DataGenerator(img_train_list, batch_size=args.batch_size)
   test_dg = DataGenerator(img_test_list, batch_size=args.batch_size)
 
-  model = build_ddp_basic(inp_shape, num_classes=54)
+  model = build_ddp_basic(inp_shape, num_classes=100)
   # model.compile(loss=losses.mean_absolute_error, optimizer='Adam', metrics=['accuracy'])
   compile_network(model)
   model.fit_generator(generator=train_dg, epochs=3, verbose=1, validation_data=test_dg)
