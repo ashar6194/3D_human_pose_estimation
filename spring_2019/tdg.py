@@ -16,6 +16,10 @@ class DataGenerator(keras.utils.Sequence):
                  dim_visual=(10, 16, 565), num_actions=3, shuffle=True, flag_data='base_depth'):
 
         self.dim = dim
+        datastats = pickle.load(open('datastats.pkl', 'rb'))
+        self.train_mean = datastats['mean']
+        self.train_std = datastats['std']
+
         self.num_actions = num_actions
         self.dim_visual = dim_visual
         self.batch_size = batch_size
@@ -57,14 +61,18 @@ class DataGenerator(keras.utils.Sequence):
 
           # aa = time.time()
           img = cv2.resize(img, (args.input_size, args.input_size))
+          dst = np.zeros(shape=(5, 2))
+          img = cv2.normalize(img, dst, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
           # print time.time() - aa
-          X[idx, ] = img.astype(np.float16)
+          X[idx, ] = img.astype(np.float32)
           name_parse = id_name.split('/')
           img_idx = int(name_parse[-1].split('.')[1]) - 1
           vid_idx = name_parse[-5]
           gt_file = '%s%s/gt_poses.pkl' % (feature_dir, vid_idx)
           gt_pose = pickle.load(open(gt_file, 'r'))[img_idx, ]
-          gt_pose = np.reshape(gt_pose, (-1, )).astype(np.float16)
+          gt_pose = np.reshape(gt_pose, (-1, )).astype(np.float32)
+          gt_pose = (gt_pose - self.train_mean) / self.train_std
           y[idx, ] = gt_pose
 
         return X, y
@@ -73,6 +81,6 @@ class DataGenerator(keras.utils.Sequence):
 if __name__ == '__main__':
 
   img_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.root_dir))
-  qwe = DataGenerator(img_list, flag_data='flow_kron', batch_size=32)
+  qwe = DataGenerator(img_list, flag_data='base_depth', batch_size=32)
   a, b = qwe.__getitem__(0)
-  print a[0].dtype, b[0].shape
+  print a[0].shape, np.min(a), np.max(a), b[0]

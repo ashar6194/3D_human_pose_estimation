@@ -26,7 +26,7 @@ def conv(x, filters, size, strides=(1, 1), padding='same', name=None):
 
 def conv_pool(x, filters, size, strides=(1, 1), padding='valid', name=None):
   x = Conv2D(filters, size, strides=strides, padding=padding,
-             use_bias=False, name=name)(x)
+             use_bias=False, name=name, kernel_initializer='glorot_normal')(x)
   x = Activation('relu', name=name)(x)
   x = MaxPooling2D(strides, padding=padding)(x)
   return x

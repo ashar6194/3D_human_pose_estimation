@@ -55,6 +55,7 @@ def find_train_stats(args):
   root_dir = args.root_dir
   instance_list = glob.glob('%s*/groundtruth.mat' % root_dir)
   pose_array = []
+  data_stats = {}
 
   for instance in tqdm(sorted(instance_list)):
     vid_idx = instance.split('/')[-2]
@@ -62,7 +63,13 @@ def find_train_stats(args):
     pose_array.append(pose_set)
 
   pose_array = np.array(pose_array).reshape((-1, 18, 3)).reshape((-1, 54))
+  data_stats['mean'] = np.mean(pose_array, axis=0)
+  data_stats['std'] = np.std(pose_array, axis=0)
+
+  pickle.dump(data_stats, open('datastats.pkl', 'wb'))
+
   print pose_array.shape
+
 
 
 def main():
