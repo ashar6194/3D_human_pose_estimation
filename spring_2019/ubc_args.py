@@ -8,7 +8,10 @@ parser.add_argument('--root_dir', default='/media/mcao/Miguel/UBC_hard/train/', 
 parser.add_argument('--test_dir', default='/media/mcao/Miguel/UBC_hard/test/', type=str,
                     help='THe root training directory for parsing stuff')
 
-parser.add_argument('--show_td', default=True, type=bool,
+parser.add_argument('--cam_type', default='Cam1', type=str,
+                    help='camera to check results for')
+
+parser.add_argument('--show_td', default='train_test', type=str,
                     help='THe root training directory for parsing stuff')
 
 parser.add_argument('--batch_size', default=32, type=int, help='THe root training directory for parsing stuff')
