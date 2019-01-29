@@ -1,3 +1,5 @@
+# sudo fuser -v /dev/nvidia0
+
 import keras
 import math
 import os
@@ -11,15 +13,15 @@ from ubc_args import args
 from model_set import build_ddp_basic, compile_network, build_ddp_vgg, build_minivgg_basic
 from tdg import DataGenerator
 from keras.models import load_model
-from eval_pipeline import infer_outputs, eval_results
+from eval_pipeline import infer_outputs, eval_results, infer_outputs_dh
 
 from keras.callbacks import TensorBoard, LearningRateScheduler, ModelCheckpoint
 from multiprocessing import cpu_count
 
 
 def step_decay(epoch):
-  initial_lrate = 0.0001
-  drop = 0.5
+  initial_lrate = 0.001
+  drop = 0.1
   epochs_drop = 1.0
   lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
   return lrate
@@ -64,11 +66,11 @@ if __name__ == '__main__':
   model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
                       use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  model_name = ckpt_dir + 'ddpdh_%s_ep5_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
+  model_name = ckpt_dir + 'ddpmse_%s_ep5_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
   model.save(model_name)
 
-  # infer_outputs(args, model, args.test_dir)
-  # eval_results(args, args.test_dir)
+  infer_outputs_dh(args, model, args.test_dir)
+  eval_results(args, args.test_dir)
   # infer_outputs(args, model, args.root_dir)
   # eval_results(args, args.root_dir)
 

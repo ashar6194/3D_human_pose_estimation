@@ -11,10 +11,10 @@ parser.add_argument('--test_dir', default='/media/mcao/Miguel/UBC_hard/test/', t
 parser.add_argument('--cam_type', default='Cam1', type=str,
                     help='camera to check results for')
 
-parser.add_argument('--show_td', default='train_test', type=str,
+parser.add_argument('--show_td', default='clusters', type=str,
                     help='THe root training directory for parsing stuff')
 
-parser.add_argument('--model_name', default='mini_vgg', type=str,
+parser.add_argument('--model_name', default='mini_alex', type=str,
                     help='To Choose the model architecture')
 
 parser.add_argument('--batch_size', default=32, type=int, help='THe root training directory for parsing stuff')

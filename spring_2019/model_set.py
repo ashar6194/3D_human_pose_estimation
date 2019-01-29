@@ -73,7 +73,7 @@ def identity(layer):
 
 
 def direct_huber_loss(y_true, y_pred):
-  sigma_sq = 1.0
+  sigma_sq = 0.8
   alpha = 0.01
 
   error = y_true - y_pred
@@ -102,7 +102,7 @@ def custom_L1_loss(y_true, y_pred):
 
 def compile_network(model):
   # optim_adam = optimizers.Adam(lr=0.001)
-  model.compile(loss=direct_huber_loss, optimizer='Adam')
+  model.compile(loss=custom_L1_loss, optimizer='Adam')
 
 
 if __name__== '__main__':
