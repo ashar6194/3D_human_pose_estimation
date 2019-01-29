@@ -1,5 +1,5 @@
 import keras
-
+import math
 import os
 import h5py
 import glob
@@ -15,6 +15,14 @@ from eval_pipeline import infer_outputs, eval_results
 
 from keras.callbacks import TensorBoard, LearningRateScheduler, ModelCheckpoint
 from multiprocessing import cpu_count
+
+
+def step_decay(epoch):
+  initial_lrate = 0.001
+  drop = 0.5
+  epochs_drop = 1.0
+  lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
+  return lrate
 
 
 if __name__ == '__main__':
@@ -35,24 +43,23 @@ if __name__ == '__main__':
   train_dg = DataGenerator(img_train_list, batch_size=args.batch_size)
   test_dg = DataGenerator(img_test_list, batch_size=args.batch_size)
 
-  model = build_ddp_vgg(inp_shape, num_classes=100)
+  model = build_ddp_basic(inp_shape, num_classes=100)
   # model.compile(loss=losses.mean_absolute_error, optimizer='Adam', metrics=['accuracy'])
   compile_network(model)
 
   filepath = ckpt_dir + 'weights_{epoch:02d}.h5'
   checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True)
   tensorboard = TensorBoard(log_dir=logs_dir, batch_size=args.batch_size)
-  callbacks_list = [checkpoint, tensorboard]
-  model.fit_generator(generator=train_dg, epochs=15, verbose=1, validation_data=test_dg,
-                      use_multiprocessing=True, workers=cpu_count(), validation_steps=35)
+  lrate = LearningRateScheduler(step_decay)
+  callbacks_list = [checkpoint, tensorboard, lrate]
+  model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
+                      use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  # use_multiprocessing=True, workers=4,
-
-  model_name = ckpt_dir + 'model_huber_cam1_{}.h5'.format(datetime.datetime.now().strftime("%Y_%m_%d"))
+  model_name = ckpt_dir + 'ddp_vgg_cam1_{}.h5'.format(datetime.datetime.now().strftime("%Y_%m_%d"))
   model.save(model_name)
 
-  infer_outputs(args, model)
-  eval_results(args)
+  # infer_outputs(args, model)
+  # eval_results(args)
 
 
   # h5py_file = h5py.File(model_name, 'w')

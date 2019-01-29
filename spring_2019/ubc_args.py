@@ -16,7 +16,7 @@ parser.add_argument('--show_td', default='train_test', type=str,
 
 parser.add_argument('--batch_size', default=32, type=int, help='THe root training directory for parsing stuff')
 
-parser.add_argument('--num_epochs', default=2, type=int, help='THe root training directory for parsing stuff')
+parser.add_argument('--num_epochs', default=5, type=int, help='THe root training directory for parsing stuff')
 
 parser.add_argument('--input_size', default=100, type=str, help='Size of input image to the network')
 

@@ -17,11 +17,11 @@ def build_ddp_vgg(input_shape, num_classes=54):
   inp = Input(shape=input_shape)
   output_vgg16_conv = model_vgg16_conv(inp)
   x = Flatten(name='flatten')(output_vgg16_conv)
-  x = Dense(1024, kernel_initializer='glorot_normal')(x)
-  x = Dropout(rate=0.5)(x)
-  x_out = Dense(512, kernel_initializer='glorot_normal', activation='relu')(x)
+  x = Dense(1024, kernel_initializer='glorot_normal', activation='relu')(x)
+  x = Dropout(rate=0.2)(x)
+  x_out = Dense(256, kernel_initializer='glorot_normal', activation='relu')(x)
   x_out = Dense(num_classes, kernel_initializer='glorot_normal')(x)
-  model = Model(inputs=inp, outputs=x_out, name='Base Model')
+  model = Model(inputs=inp, outputs=x_out, name='VGG Model')
   print model.summary()
 
   return model
@@ -29,22 +29,20 @@ def build_ddp_vgg(input_shape, num_classes=54):
 
 def build_ddp_basic(input_shape, num_classes=54):
   inp = Input(shape=input_shape)
-  # x = conv_pool(inp, 64, (3, 3))
-  x = conv_pool(inp, 64, (3, 3))
-  x = conv_pool(inp, 128, (3, 3))
-  x = conv_pool(inp, 128, (3, 3))
 
-  # x = conv_pool(x, 192, (5, 5))
-  # x = conv_pool(x, 512, (3, 3))
-  # x = conv_act(x, 1024, (2, 2))
-  # x = conv_act(x, 2048, (2, 2))
+  x = conv_pool(inp, 96, (7, 7))
+
+  x = conv_pool(x, 192, (5, 5))
+  x = conv_pool(x, 512, (3, 3))
+  x = conv_act(x, 1024, (2, 2))
+  x = conv_act(x, 2048, (2, 2))
   x = Flatten()(x)
-  # x = Dense(1024)(x)
+  x = Dense(1024, kernel_initializer='glorot_uniform', activation='relu')(x)
 
   x = Dense(256, kernel_initializer='glorot_uniform', activation='relu')(x)
   x = Dropout(rate=0.2)(x)
   x_out = Dense(num_classes, kernel_initializer='glorot_uniform')(x)
-  model = Model(inputs=inp, outputs=x_out, name='Base Model')
+  model = Model(inputs=inp, outputs=x_out, name='Alexnet Model')
 
   return model
 

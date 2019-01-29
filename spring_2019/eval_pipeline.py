@@ -34,14 +34,14 @@ def eval_results(args):
   a = 1
 
 
-def infer_outputs(args, model):
+def infer_outputs(args, model, directory=args.test_dir):
 
   datastats = pickle.load(open('datastats.pkl', 'rb'))
   train_mean = datastats['mean']
   train_std = datastats['std']
   pkl_array = pickle.load(open('pose_centroids.pkl', 'rb'))
 
-  img_folder_list = sorted(glob.glob('%s*/images/depthRender/*' % args.test_dir))
+  img_folder_list = sorted(glob.glob('%s*/images/depthRender/*' % directory))
   for id_folder in tqdm(img_folder_list):
     img_name_list = sorted(glob.glob('%s/*.png' % id_folder))
 
@@ -75,14 +75,14 @@ def infer_outputs(args, model):
     pred_file = '%s%s/pred_poses_%s.pkl' % (args.test_dir, vid_idx, cam_idx)
     # print pred_file
 
-    pickle.dump(pose_npy, open(pred_file, 'wb'))
+    # pickle.dump(pose_npy, open(pred_file, 'wb'))
 
 
 if __name__ == '__main__':
-  eval_results(args)
-  # ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
-  # model_name = ckpt_dir + 'model_cam1_2019_01_26_19_17.h5'
-  # inp_shape = (args.input_size, args.input_size, 3)
-  # ddp_model = build_ddp_vgg(inp_shape, num_classes=100)
-  # ddp_model.load_weights(model_name)
-  # infer_outputs(args, ddp_model)
+  # eval_results(args)
+  ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
+  model_name = ckpt_dir + 'model_cam1_2019_01_26_19_17.h5'
+  inp_shape = (args.input_size, args.input_size, 3)
+  ddp_model = build_ddp_vgg(inp_shape, num_classes=100)
+  ddp_model.load_weights(model_name)
+  infer_outputs(args, ddp_model)
