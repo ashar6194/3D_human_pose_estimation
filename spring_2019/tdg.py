@@ -52,7 +52,7 @@ class DataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.indexes)
 
     def __data_generation_kron(self, list_ids_temp, feature_dir):
-        X = np.empty((self.batch_size, args.input_size, args.input_size, 3), dtype=np.float16)
+        X = np.empty((self.batch_size, args.input_size, args.input_size, 1), dtype=np.float16)
         y = np.empty((self.batch_size, 54), dtype=np.float16)
         # y = [[None]] * self.batch_size
 
@@ -63,6 +63,8 @@ class DataGenerator(keras.utils.Sequence):
           img = cv2.resize(img, (args.input_size, args.input_size))
           dst = np.zeros(shape=(5, 2))
           img = cv2.normalize(img, dst, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+          img = np.expand_dims(np.mean(img, axis=-1), axis=-1)
+          # print img.shape
 
           # print time.time() - aa
           X[idx, ] = img.astype(np.float32)

@@ -14,7 +14,10 @@ parser.add_argument('--cam_type', default='Cam1', type=str,
 parser.add_argument('--show_td', default='train_test', type=str,
                     help='THe root training directory for parsing stuff')
 
-parser.add_argument('--batch_size', default=32, type=int, help='THe root training directory for parsing stuff')
+parser.add_argument('--model_name', default='mini_vgg', type=str,
+                    help='To Choose the model architecture')
+
+parser.add_argument('--batch_size', default=16, type=int, help='THe root training directory for parsing stuff')
 
 parser.add_argument('--num_epochs', default=5, type=int, help='THe root training directory for parsing stuff')
 

@@ -8,7 +8,7 @@ import datetime
 
 from keras import losses
 from ubc_args import args
-from model_set import build_ddp_basic, compile_network, build_ddp_vgg
+from model_set import build_ddp_basic, compile_network, build_ddp_vgg, build_minivgg_basic
 from tdg import DataGenerator
 from keras.models import load_model
 from eval_pipeline import infer_outputs, eval_results
@@ -36,14 +36,22 @@ if __name__ == '__main__':
   if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
 
-  inp_shape = (args.input_size, args.input_size, 3)
+  inp_shape = (args.input_size, args.input_size, 1)
 
   img_train_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.root_dir))
   img_test_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.test_dir))
   train_dg = DataGenerator(img_train_list, batch_size=args.batch_size)
   test_dg = DataGenerator(img_test_list, batch_size=args.batch_size)
 
-  model = build_ddp_basic(inp_shape, num_classes=100)
+  if args.model_name == 'mini_vgg':
+    print 'USing Model = %s' % args.model_name
+    model = build_minivgg_basic(inp_shape, num_classes=100)
+
+  elif args.model_name == 'mini_alex':
+    model = build_ddp_basic(inp_shape, num_classes=100)
+
+  # else:
+  #   model = build_ddp_vgg(inp_shape, num_classes=100)
   # model.compile(loss=losses.mean_absolute_error, optimizer='Adam', metrics=['accuracy'])
   compile_network(model)
 
@@ -55,7 +63,7 @@ if __name__ == '__main__':
   model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
                       use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  model_name = ckpt_dir + 'ddp_vgg_cam1_{}.h5'.format(datetime.datetime.now().strftime("%Y_%m_%d"))
+  model_name = ckpt_dir + 'ddp_%s_cam1_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%Y_%m_%d"))
   model.save(model_name)
 
   # infer_outputs(args, model)

@@ -47,6 +47,26 @@ def build_ddp_basic(input_shape, num_classes=54):
   return model
 
 
+def build_minivgg_basic(input_shape, num_classes=54):
+  inp = Input(shape=input_shape)
+
+  x = conv_act(inp, 64, (3, 3))
+  x = MaxPooling2D()(x)
+  x = conv_act(x, 128, (3, 3))
+  x = MaxPooling2D()(x)
+  x = conv_act(x, 256, (3, 3))
+  x = conv_act(x, 512, (3, 3))
+  x = MaxPooling2D()(x)
+  x = conv_act(x, 1024, (3, 3))
+  x = Flatten()(x)
+  x = Dense(1024, kernel_initializer='glorot_uniform', activation='relu')(x)
+  x = Dropout(rate=0.2)(x)
+  x = Dense(256, kernel_initializer='glorot_uniform', activation='relu')(x)
+  x_out = Dense(num_classes, kernel_initializer='glorot_uniform')(x)
+  model = Model(inputs=inp, outputs=x_out, name='Mini VGGnet Model')
+  return model
+
+
 def identity(layer):
   print('Layer output:\n', layer)
   return layer
