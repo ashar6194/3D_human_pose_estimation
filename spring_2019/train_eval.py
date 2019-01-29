@@ -18,7 +18,7 @@ from multiprocessing import cpu_count
 
 
 def step_decay(epoch):
-  initial_lrate = 0.001
+  initial_lrate = 0.0001
   drop = 0.5
   epochs_drop = 1.0
   lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
   if args.model_name == 'mini_vgg':
     print 'USing Model = %s' % args.model_name
-    model = build_minivgg_basic(inp_shape, num_classes=100)
+    model = build_minivgg_basic(inp_shape, num_classes=54)
 
   elif args.model_name == 'mini_alex':
     model = build_ddp_basic(inp_shape, num_classes=100)
@@ -64,13 +64,13 @@ if __name__ == '__main__':
   model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
                       use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  model_name = ckpt_dir + 'ddp_%s_ep50_cam1_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
+  model_name = ckpt_dir + 'ddpdh_%s_ep5_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
   model.save(model_name)
 
-  infer_outputs(args, model, args.test_dir)
-  eval_results(args, args.test_dir)
-  infer_outputs(args, model, args.root_dir)
-  eval_results(args, args.root_dir)
+  # infer_outputs(args, model, args.test_dir)
+  # eval_results(args, args.test_dir)
+  # infer_outputs(args, model, args.root_dir)
+  # eval_results(args, args.root_dir)
 
 
   # h5py_file = h5py.File(model_name, 'w')

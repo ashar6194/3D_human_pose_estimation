@@ -140,7 +140,7 @@ class pose_viz():
 
           # print gt_pose.shape
 
-          # self.publish_pose(gt_pose/100.0, array_idx, idx, data_mode='GT')
+          self.publish_pose(gt_pose/100.0, array_idx, idx, data_mode='GT')
           self.publish_pose(pred_pose/100.0, array_idx, idx, data_mode='PRED')
 
           im_name = os.path.join(pl_name_im, 'mayaProject.%06d.png' % (idx+1))

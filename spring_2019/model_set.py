@@ -54,13 +54,13 @@ def build_minivgg_basic(input_shape, num_classes=54):
   x = MaxPooling2D()(x)
   x = conv_act(x, 128, (3, 3))
   x = MaxPooling2D()(x)
-  # x = conv_act(x, 256, (3, 3))
+  x = conv_act(x, 256, (3, 3))
   x = conv_act(x, 512, (3, 3))
   x = MaxPooling2D()(x)
   x = conv_act(x, 1024, (3, 3))
   x = Flatten()(x)
   x = Dense(1024, kernel_initializer='glorot_uniform', activation='relu')(x)
-  x = Dropout(rate=0.4)(x)
+  x = Dropout(rate=0.2)(x)
   x = Dense(256, kernel_initializer='glorot_uniform', activation='relu')(x)
   x_out = Dense(num_classes, kernel_initializer='glorot_uniform')(x)
   model = Model(inputs=inp, outputs=x_out, name='Mini VGGnet Model')
@@ -72,37 +72,37 @@ def identity(layer):
   return layer
 
 
-def custom_L1_loss(y_true, y_pred):
-
+def direct_huber_loss(y_true, y_pred):
   sigma_sq = 1.0
   alpha = 0.01
-  datastats = pickle.load(open('datastats.pkl', 'rb'))
-  train_mean = datastats['mean']
-  train_std = datastats['std']
 
-  pkl_array = pickle.load(open('pose_centroids.pkl', 'rb'))
-
-  gt_bases = K.cast(K.reshape(pkl_array, (100, -1)), 'float32')
-  gt_bases = (gt_bases - train_mean) / train_std
-
-  pred_rep = K.repeat_elements(K.reshape(y_pred, (-1, 100, 1)), gt_bases.shape[1], axis=2)
-  K.print_tensor(y_pred)
-  final_pred = pred_rep * gt_bases
-
-  final_pred = K.sum(final_pred, axis=1)
-  error = y_true - final_pred
+  error = y_true - y_pred
   cond = tf.keras.backend.abs(error) < sigma_sq
-  squared_loss = 0.5 * tf.keras.backend.square(error)
-  linear_loss = sigma_sq * (tf.keras.backend.abs(error) - 0.5 * sigma_sq)
+  squared_loss = 0.5 * tf.keras.backend.square(error) * sigma_sq
+  linear_loss = (tf.keras.backend.abs(error) - (0.5 / sigma_sq))
   res_loss = K.mean(tf.where(cond, squared_loss, linear_loss))
 
   reg_term = K.sum(K.abs(y_pred))
   return ((1 - alpha) * res_loss) + (alpha * reg_term)
 
 
+def custom_L1_loss(y_true, y_pred):
+  datastats = pickle.load(open('datastats.pkl', 'rb'))
+  train_mean = datastats['mean']
+  train_std = datastats['std']
+  pkl_array = pickle.load(open('pose_centroids.pkl', 'rb'))
+  gt_bases = K.cast(K.reshape(pkl_array, (100, -1)), 'float32')
+  gt_bases = (gt_bases - train_mean) / train_std
+  pred_rep = K.repeat_elements(K.reshape(y_pred, (-1, 100, 1)), gt_bases.shape[1], axis=2)
+  K.print_tensor(y_pred)
+  final_pred = pred_rep * gt_bases
+  final_pred = K.sum(final_pred, axis=1)
+  return direct_huber_loss(y_true, final_pred)
+
+
 def compile_network(model):
   # optim_adam = optimizers.Adam(lr=0.001)
-  model.compile(loss=custom_L1_loss, optimizer='Adam')
+  model.compile(loss=direct_huber_loss, optimizer='Adam')
 
 
 if __name__== '__main__':
@@ -112,12 +112,9 @@ if __name__== '__main__':
   datastats = pickle.load(open('datastats.pkl', 'rb'))
   train_mean = datastats['mean']
   train_std = datastats['std']
-
   pkl_array = pickle.load(open('pose_centroids.pkl', 'rb'))
-
   gt_bases = np.reshape(pkl_array, (100, -1))
   new_bases = (gt_bases - train_mean) / train_std
-
   print gt_bases.shape, gt_bases[1, ], new_bases[1, ]
 
 

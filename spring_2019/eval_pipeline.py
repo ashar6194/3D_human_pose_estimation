@@ -72,17 +72,16 @@ def infer_outputs(args, model, directory=args.test_dir):
     name_parse = id_folder.split('/')
     vid_idx = name_parse[-4]
     cam_idx = name_parse[-1]
-    pred_file = '%s%s/preds_%s_%s.pkl' % (directory, vid_idx, args.model_name, cam_idx)
+    pred_file = '%s%s/pred_%s_%s.pkl' % (directory, vid_idx, args.model_name, cam_idx)
     # print pred_file
-
     pickle.dump(pose_npy, open(pred_file, 'wb'))
 
 
 if __name__ == '__main__':
-  eval_results(args)
   # ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
   # model_name = ckpt_dir + 'ddp_mini_vgg_cam1_2019_01_29.h5'
   # inp_shape = (args.input_size, args.input_size, 1)
   # ddp_model = build_minivgg_basic(inp_shape, num_classes=100)
   # ddp_model.load_weights(model_name)
   # infer_outputs(args, ddp_model)
+  eval_results(args, args.test_dir)
