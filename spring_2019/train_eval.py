@@ -55,19 +55,22 @@ if __name__ == '__main__':
   # model.compile(loss=losses.mean_absolute_error, optimizer='Adam', metrics=['accuracy'])
   compile_network(model)
 
-  filepath = ckpt_dir + 'weights_{epoch:02d}.h5'
-  checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True)
+  filepath = ckpt_dir + 'weights_%03d.h5' % args.num_epochs
+  checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1,
+                               save_best_only=True, period=5)
   tensorboard = TensorBoard(log_dir=logs_dir, batch_size=args.batch_size)
   lrate = LearningRateScheduler(step_decay)
   callbacks_list = [checkpoint, tensorboard, lrate]
   model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
                       use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  model_name = ckpt_dir + 'ddp_%s_cam1_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%Y_%m_%d"))
+  model_name = ckpt_dir + 'ddp_%s_ep50_cam1_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
   model.save(model_name)
 
-  # infer_outputs(args, model)
-  # eval_results(args)
+  infer_outputs(args, model, args.test_dir)
+  eval_results(args, args.test_dir)
+  infer_outputs(args, model, args.root_dir)
+  eval_results(args, args.root_dir)
 
 
   # h5py_file = h5py.File(model_name, 'w')

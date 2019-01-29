@@ -6,12 +6,12 @@ import pickle
 from tqdm import tqdm
 from keras.models import load_model
 from ubc_args import args
-from model_set import build_ddp_basic, compile_network, build_ddp_vgg
+from model_set import build_ddp_basic, compile_network, build_ddp_vgg, build_minivgg_basic
 
 
-def eval_results(args):
-  pred_cam_list = sorted(glob.glob('%s*/pred_poses_%s.pkl' % (args.test_dir, args.cam_type)))
-  gt_pose_list = sorted(glob.glob('%s*/gt_poses.pkl' % args.test_dir))
+def eval_results(args, directory=args.test_dir):
+  pred_cam_list = sorted(glob.glob('%s*/pred_%s_%s.pkl' % (directory, args.model_name, args.cam_type)))
+  gt_pose_list = sorted(glob.glob('%s*/gt_poses.pkl' % directory))
 
   full_pred_list = []
   full_gt_list = []
@@ -31,7 +31,6 @@ def eval_results(args):
   print np.mean(error)
   print np.median(error)
 
-  a = 1
 
 
 def infer_outputs(args, model, directory=args.test_dir):
@@ -41,7 +40,7 @@ def infer_outputs(args, model, directory=args.test_dir):
   train_std = datastats['std']
   pkl_array = pickle.load(open('pose_centroids.pkl', 'rb'))
 
-  img_folder_list = sorted(glob.glob('%s*/images/depthRender/*' % directory))
+  img_folder_list = sorted(glob.glob('%s*/images/depthRender/Cam1' % directory))
   for id_folder in tqdm(img_folder_list):
     img_name_list = sorted(glob.glob('%s/*.png' % id_folder))
 
@@ -53,6 +52,7 @@ def infer_outputs(args, model, directory=args.test_dir):
       img = cv2.resize(img, (args.input_size, args.input_size))
       dst = np.zeros(shape=(5, 2))
       img = cv2.normalize(img, dst, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+      img = np.expand_dims(np.mean(img, axis=-1), axis=-1)
       X = np.expand_dims(img, axis=0)
       pose_weights = model.predict(X)
 
@@ -72,17 +72,17 @@ def infer_outputs(args, model, directory=args.test_dir):
     name_parse = id_folder.split('/')
     vid_idx = name_parse[-4]
     cam_idx = name_parse[-1]
-    pred_file = '%s%s/pred_vgg_ddp_%s.pkl' % (args.test_dir, vid_idx, cam_idx)
+    pred_file = '%s%s/preds_%s_%s.pkl' % (directory, vid_idx, args.model_name, cam_idx)
     # print pred_file
 
     pickle.dump(pose_npy, open(pred_file, 'wb'))
 
 
 if __name__ == '__main__':
-  # eval_results(args)
-  ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
-  model_name = ckpt_dir + 'ddp_vgg_cam1_2019_01_28.h5'
-  inp_shape = (args.input_size, args.input_size, 3)
-  ddp_model = build_ddp_vgg(inp_shape, num_classes=100)
-  ddp_model.load_weights(model_name)
-  infer_outputs(args, ddp_model)
+  eval_results(args)
+  # ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
+  # model_name = ckpt_dir + 'ddp_mini_vgg_cam1_2019_01_29.h5'
+  # inp_shape = (args.input_size, args.input_size, 1)
+  # ddp_model = build_minivgg_basic(inp_shape, num_classes=100)
+  # ddp_model.load_weights(model_name)
+  # infer_outputs(args, ddp_model)

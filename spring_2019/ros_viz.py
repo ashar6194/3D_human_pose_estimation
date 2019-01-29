@@ -22,7 +22,8 @@ class pose_viz():
     self.pose_list = sorted(glob.glob('%s*/gt_poses.pkl' % args.root_dir))
 
     self.test_gt_list = sorted(glob.glob('%s*/gt_poses.pkl' % args.test_dir))
-    self.test_pred_list = sorted(glob.glob('%s*/pred_poses_%s.pkl' % (args.test_dir, args.cam_type)))
+    self.test_pred_list = sorted(glob.glob('%s*/pred_%s_%s.pkl' % (args.test_dir, args.model_name, args.cam_type)))
+    print self.test_pred_list
 
     # print self.pose_list
     self.bridge = CvBridge()
@@ -61,7 +62,7 @@ class pose_viz():
 
   def publish_individual_line(self, idx, points_pair, data_mode):
     if data_mode == 'GT':
-      print 'Hey'
+      # print 'Hey'
       marker4 = Marker(
         type=Marker.LINE_STRIP,
         id=idx+20,
@@ -137,9 +138,9 @@ class pose_viz():
           gt_pose = pkl_gt[idx, ]
           pred_pose = pkl_pred[idx, ]
 
-          print gt_pose.shape
+          # print gt_pose.shape
 
-          self.publish_pose(gt_pose/100.0, array_idx, idx, data_mode='GT')
+          # self.publish_pose(gt_pose/100.0, array_idx, idx, data_mode='GT')
           self.publish_pose(pred_pose/100.0, array_idx, idx, data_mode='PRED')
 
           im_name = os.path.join(pl_name_im, 'mayaProject.%06d.png' % (idx+1))
