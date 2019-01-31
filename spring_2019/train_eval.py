@@ -22,8 +22,9 @@ from multiprocessing import cpu_count
 def step_decay(epoch):
   initial_lrate = 0.001
   drop = 0.1
-  epochs_drop = 1.0
-  lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
+  epochs_drop = 25.0
+  num_epoch = epoch if epoch < 100 else 100
+  lrate = initial_lrate * math.pow(drop, math.floor((1+num_epoch)/epochs_drop))
   return lrate
 
 
@@ -40,8 +41,8 @@ if __name__ == '__main__':
 
   inp_shape = (args.input_size, args.input_size, 1)
 
-  img_train_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.root_dir))
-  img_test_list = sorted(glob.glob('%s*/images/depthRender/Cam1/*.png' % args.test_dir))
+  img_train_list = sorted(glob.glob('%s*/images/depthRender/*/*.png' % args.root_dir))
+  img_test_list = sorted(glob.glob('%s*/images/depthRender/*/*.png' % args.test_dir))
   train_dg = DataGenerator(img_train_list, batch_size=args.batch_size)
   test_dg = DataGenerator(img_test_list, batch_size=args.batch_size)
 
@@ -58,19 +59,18 @@ if __name__ == '__main__':
   compile_network(model)
 
   filepath = ckpt_dir + 'weights_%03d.h5' % args.num_epochs
-  checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1,
-                               save_best_only=True, period=5)
+  checkpoint = checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
   tensorboard = TensorBoard(log_dir=logs_dir, batch_size=args.batch_size)
   lrate = LearningRateScheduler(step_decay)
   callbacks_list = [checkpoint, tensorboard, lrate]
   model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
                       use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  model_name = ckpt_dir + 'ddpmse_%s_ep5_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
+  model_name = ckpt_dir + 'ddpmjmfullset_%s_ep500_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
   model.save(model_name)
-
-  infer_outputs_dh(args, model, args.test_dir)
-  eval_results(args, args.test_dir)
+  #
+  # infer_outputs_dh(args, model, args.test_dir)
+  # eval_results(args, args.test_dir)
   # infer_outputs(args, model, args.root_dir)
   # eval_results(args, args.root_dir)
 

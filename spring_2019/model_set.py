@@ -101,8 +101,8 @@ def custom_L1_loss(y_true, y_pred):
 
 
 def compile_network(model):
-  # optim_adam = optimizers.Adam(lr=0.001)
-  model.compile(loss=custom_L1_loss, optimizer='Adam')
+  optim_adam = optimizers.Adam(lr=0.001, decay=0.0005)
+  model.compile(loss=custom_L1_loss, optimizer=optim_adam)
 
 
 if __name__== '__main__':
@@ -116,6 +116,7 @@ if __name__== '__main__':
   gt_bases = np.reshape(pkl_array, (100, -1))
   new_bases = (gt_bases - train_mean) / train_std
   print gt_bases.shape, gt_bases[1, ], new_bases[1, ]
+
 
 
 
