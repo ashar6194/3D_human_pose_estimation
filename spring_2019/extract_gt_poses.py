@@ -13,7 +13,7 @@ import time
 from sklearn.cluster import KMeans
 
 
-root_dir = args.test_dir
+root_dir = args.root_dir
 #
 # joint_names = ['HeadPGX','HipsPGX', 'LeftArmPGX', 'LeftFingerBasePGX', 'LeftFootPGX', 'LeftForeArmPGX', 'LeftHandPGX','LeftInHandIndexPGX',
 #                'LeftInHandThumbPGX', 'LeftLegPGX', 'LeftShoulderPGX', 'LeftToeBasePGX', 'LeftUpLegPGX','Neck1PGX', 'NeckPGX','RightArmPGX',
@@ -73,7 +73,7 @@ def find_train_stats(args):
 
 
 def main():
-  instance_list = glob.glob('%s*/groundtruth.mat' % args.test_dir)
+  instance_list = glob.glob('%s*/groundtruth.mat' % args.root_dir)
   flag_instance = False
   useful_jnt_idx = pickle.load(open('lookup.pkl', 'rb'))
 

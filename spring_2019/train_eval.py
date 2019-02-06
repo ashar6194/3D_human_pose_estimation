@@ -30,8 +30,8 @@ def step_decay(epoch):
 
 if __name__ == '__main__':
 
-  ckpt_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_models/'
-  logs_dir = '/media/mcao/Miguel/UBC_hard/' + 'keras_logs/'
+  ckpt_dir = '/data/UBC_hard/' + 'keras_models/'
+  logs_dir = '/data/UBC_hard/' + 'keras_logs/'
 
   if not os.path.exists(ckpt_dir):
     os.makedirs(ckpt_dir)
@@ -47,7 +47,6 @@ if __name__ == '__main__':
   test_dg = DataGenerator(img_test_list, batch_size=args.batch_size)
 
   if args.model_name == 'mini_vgg':
-    print 'USing Model = %s' % args.model_name
     model = build_minivgg_basic(inp_shape, num_classes=54)
 
   elif args.model_name == 'mini_alex':
@@ -66,7 +65,7 @@ if __name__ == '__main__':
   model.fit_generator(generator=train_dg, epochs=args.num_epochs, verbose=1, validation_data=test_dg,
                       use_multiprocessing=True, workers=cpu_count(), validation_steps=100)
 
-  model_name = ckpt_dir + 'ddpmjmfullset_%s_ep500_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
+  model_name = ckpt_dir + 'ddp_%s_ep500_%s.h5' % (args.model_name, datetime.datetime.now().strftime("%m_%d"))
   model.save(model_name)
   #
   # infer_outputs_dh(args, model, args.test_dir)

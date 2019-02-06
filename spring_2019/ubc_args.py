@@ -2,17 +2,17 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--root_dir', default='/media/mcao/Miguel/UBC_hard/train/', type=str,
+parser.add_argument('--root_dir', default='/data/UBC_hard/train/', type=str,
                     help='THe root training directory for parsing stuff')
 
-parser.add_argument('--test_dir', default='/media/mcao/Miguel/UBC_hard/test/', type=str,
+parser.add_argument('--test_dir', default='/data/UBC_hard/test/', type=str,
                     help='THe root training directory for parsing stuff')
 
 parser.add_argument('--cam_type', default='Cam1', type=str,
                     help='camera to check results for')
 
 parser.add_argument('--show_td', default='clusters', type=str,
-                    help='THe root training directory for parsing stuff')
+                    help='Flag for RoS visualization mode')
 
 parser.add_argument('--model_name', default='mini_alex', type=str,
                     help='To Choose the model architecture')
