@@ -108,8 +108,6 @@ def findMidPoint(npcloud):
   return min_dist_a, min_dist_b, centroids[0, :], centroids[1, :]
 
 
-def img_2_pc(depth_img, mapper, )
-
 
 def pointcloudXYZ(masked_depth_image, camera_info, ymin=-0.6, ymax=0.6, zmin=0, zmax=10000):
     proj_matrix_ravel =  np.asarray(camera_info.P)
@@ -137,7 +135,7 @@ def pointcloudXYZ(masked_depth_image, camera_info, ymin=-0.6, ymax=0.6, zmin=0, 
     return pts, pts_2d
 
 
-def xyzToPcl(msg_pcl, pts, flag_dense):
+def xyzToPcl(msg_pcl, pts):
   flag_dense = int(np.isfinite(pts).all())
   msg_pcl.data = np.asarray(pts, np.float32).tostring()
   msg_pcl.is_dense = flag_dense
@@ -151,6 +149,7 @@ def xyzToPcl(msg_pcl, pts, flag_dense):
   msg_pcl.point_step = 12
   msg_pcl.row_step = 12*pts.shape[0]
   msg_pcl.header.stamp = rospy.Time.now()
+  msg_pcl.header.frame_id = 'map'
   return msg_pcl
 
 def findMaxAreaComponents(binary_mask, num_regions=2):
