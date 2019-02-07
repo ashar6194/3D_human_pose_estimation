@@ -108,6 +108,9 @@ def findMidPoint(npcloud):
   return min_dist_a, min_dist_b, centroids[0, :], centroids[1, :]
 
 
+def img_2_pc(depth_img, mapper, )
+
+
 def pointcloudXYZ(masked_depth_image, camera_info, ymin=-0.6, ymax=0.6, zmin=0, zmax=10000):
     proj_matrix_ravel =  np.asarray(camera_info.P)
     proj_matrix = np.reshape(proj_matrix_ravel, (3, 4))
@@ -132,6 +135,7 @@ def pointcloudXYZ(masked_depth_image, camera_info, ymin=-0.6, ymax=0.6, zmin=0, 
     pts_2d = np.delete(pts, 1, 1)
     # print pts_2d.shape
     return pts, pts_2d
+
 
 def xyzToPcl(msg_pcl, pts, flag_dense):
   flag_dense = int(np.isfinite(pts).all())

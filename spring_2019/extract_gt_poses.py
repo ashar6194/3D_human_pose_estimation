@@ -100,7 +100,7 @@ def main():
       joints = np.array([mat_file['joints'][0][idx][0][0][jnt_idx][0][12:15] for jnt_idx in useful_jnt_idx])
       pose_list.append(joints)
 
-    pickle.dump(np.array(pose_list), open('%s%s/gt_poses.pkl' % (root_dir, vid_idx), 'wb'))
+    # pickle.dump(np.array(pose_list), open('%s%s/gt_poses.pkl' % (root_dir, vid_idx), 'wb'))
     # print time.time() - aa
 
 
