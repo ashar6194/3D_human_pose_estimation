@@ -2,22 +2,27 @@
 # 17 CM- Lateral
 
 
-from models import MiniAutoencoder, MiniUNet, MiniResSum, SegNetAutoencoder, MiniFusion, MiniFusionNet, MobileUnet
-from newmodels import ENet_model
-from sklearn.cluster import KMeans
-from sensor_msgs.msg import PointCloud2, PointField
-from visualization_msgs.msg import Marker, MarkerArray
-from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
-from std_msgs.msg import Header, ColorRGBA
+# from models import MiniAutoencoder, MiniUNet, MiniResSum, SegNetAutoencoder, MiniFusion, MiniFusionNet, MobileUnet
+# from newmodels import ENet_model
+# from sklearn.cluster import KMeans
+# from sensor_msgs.msg import PointCloud2, PointField
+# from visualization_msgs.msg import Marker, MarkerArray
+# from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
+# from std_msgs.msg import Header, ColorRGBA
 
+import matplotlib.pyplot as plt
+import h5py
 import config
 import os
 import tensorflow as tf
 import numpy as np
 import math
 import cv2
-import rospy
+# import rospy
 import itertools
+
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 
 def colors_of_dataset(dataset_name):
   return config.colors[dataset_name]
@@ -106,7 +111,6 @@ def findMidPoint(npcloud):
   # poi_b = np.mean(cp_set_b, axis=0)
 
   return min_dist_a, min_dist_b, centroids[0, :], centroids[1, :]
-
 
 
 def pointcloudXYZ(masked_depth_image, camera_info, ymin=-0.6, ymax=0.6, zmin=0, zmax=10000):
@@ -382,3 +386,79 @@ def findConstrainedClusters(centroids):
   return pair
 
 
+def get_camera_params(config_file='./config_files/camera_params.mat'):
+    cam_params = h5py.File(config_file, 'r')
+    fx1 = np.asarray(cam_params['fx1'])
+    fy1 = np.asarray(cam_params['fy1'])
+    cx1 = np.asarray(cam_params['cx1'])
+    cy1 = np.asarray(cam_params['cy1'])
+    fx2 = np.asarray(cam_params['fx2'])
+    fy2 = np.asarray(cam_params['fy2'])
+    cx2 = np.asarray(cam_params['cx2'])
+    cy2 = np.asarray(cam_params['cy2'])
+    h1 = np.asarray(cam_params['H1'])
+    h2 = np.asarray(cam_params['H2'])
+
+    return fx1, fy1, cx1, cy1, fx2, fy2, cx2, cy2, h1, h2
+
+
+def get_skeleton_info(skeleton_file):
+  skel_params = h5py.File(skeleton_file, 'r')
+
+  im_mc = np.asarray(skel_params['im_mc'])
+  im_mc2 = np.asarray(skel_params['im_mc2'])
+  skel_jnt = np.asarray(skel_params['skel_jnt'])
+  center = np.asarray(skel_params['center'])
+  stand = np.asarray(skel_params['stand'])
+
+  return im_mc, im_mc2, skel_jnt, center, stand
+
+
+def map_range_2_pc(depth_image, fx, fy, cx, cy, H, center, stand, thresh=5):
+  x, y = np.meshgrid(range(depth_image.shape[1]), range(depth_image.shape[0]))
+
+  x1_cor = (x - cx) * depth_image / fx
+  y1_cor = (y - cy) * depth_image / fy
+  xr, yr, x1_corr, y1_corr, flattened_depth_image = np.ravel(x.T), np.ravel(y.T), np.ravel(x1_cor.T), np.ravel(
+    y1_cor.T), np.ravel(depth_image.T)
+  idx = np.arange(flattened_depth_image.shape[0])
+
+  # Threshold as instructed by creators
+  cond_idx = idx[(0 < flattened_depth_image) & (flattened_depth_image < 3500)]
+  new_indices = np.array([xr[cond_idx[:]], yr[cond_idx[:]]])
+  indices = np.transpose(new_indices)
+
+  # Find homogeneous 3D points
+  pts = np.matmul(H.T, np.array([x1_corr[cond_idx[:]], y1_corr[cond_idx[:]], flattened_depth_image[cond_idx[:]],
+                                 np.ones(len(flattened_depth_image[cond_idx[:]]))]))
+  pts = pts[[2, 0, 1], :]
+
+  # Threshold on distance centre of mass of the body
+  dist = ((np.sqrt(np.sum(((pts[0:2, :] - center.T) ** 2), 0))) < (4 * np.max(stand))) & (pts[2, :] > thresh)
+  pts = pts[:, dist]
+  indices = indices[dist, :]
+
+  # Generate a mask
+  mask = np.zeros((depth_image.shape[1], depth_image.shape[0]))
+  mask.ravel()[cond_idx[dist]] = 1
+
+  return pts, indices, mask.T
+
+
+def get_pixel_level_classes(input_image, color_map):
+  labels = np.zeros((input_image.shape[0], input_image.shape[1]))
+  r, g, b = input_image[:, :, 0], input_image[:, :, 1], input_image[:, :, 2]
+  num_classes = len(color_map)
+
+  for i in range(num_classes):
+    result = np.logical_and(np.logical_and(np.abs(r - color_map[i][0]) < 5, np.abs(g - color_map[i][1]) < 5),
+                            np.abs(b - color_map[i][2]) < 5)
+    labels[result] = i
+  return labels
+
+def plot_basic_object(points, pose):
+  fig = plt.figure()
+  ax = fig.add_subplot(111, projection='3d')
+  S = ax.scatter(points[0, :], points[1, :], points[2, :], c='b', marker='o')
+  P = ax.plot(pose[0, :], pose[1, :], pose[2, :], c='r', marker='D')
+  plt.show()
