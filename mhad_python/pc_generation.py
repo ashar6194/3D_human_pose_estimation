@@ -10,12 +10,21 @@ from config import colors as color_map
 from utils import get_camera_params, map_range_2_pc, get_skeleton_info, plot_basic_object
 
 
-OUT_PC_DIR = '/data/MHAD/train_pc/'
+OUT_PC_DIR = '/media/mcao/Miguel/BerkeleyMHAD/train_pc/'
+OUT_PC1_DIR = '/local/ashar/MHAD/train_pc1/'
+OUT_PC2_DIR = '/local/ashar/MHAD/train_pc2/'
+
+if not os.path.exists(OUT_PC1_DIR):
+    os.makedirs(OUT_PC1_DIR)
+
+if not os.path.exists(OUT_PC2_DIR):
+    os.makedirs(OUT_PC2_DIR)
+
 OUT_GT_DIR = '/data/MHAD/train_pcgt/'
 
 if not os.path.exists(OUT_PC_DIR):
     os.makedirs(OUT_PC_DIR)
-if not os.path.exists(OUT_GT_DIR ):
+if not os.path.exists(OUT_GT_DIR):
     os.makedirs(OUT_GT_DIR)
 
 
@@ -36,7 +45,8 @@ def extract_features_labelled(drc, config_file, dir_labels, mhad_color_map, subj
 
                     for i in tqdm(range(min(im_mc.shape[1], im_mc2.shape[1]))):
                         try:
-                            # Read Depth data from two kinects
+
+                            # if not os.path.exists(out_pc_name):
                             d1 = misc.imread(
                                 '%s/Kinect/Kin01/S%02d/A%02d/R%02d/kin_k01_s%02d_a%02d_r%02d_depth_%05d.pgm' % (
                                     drc, sub, act, rec, sub, act, rec, i))
@@ -46,20 +56,42 @@ def extract_features_labelled(drc, config_file, dir_labels, mhad_color_map, subj
 
                             # Apply inverse projection to fetch point clouds in mm and corresponding indices
                             pts1, indices1, mask1 = map_range_2_pc(d1, fx1, fy1, cx1, cy1, h1, center, stand, thresh=5)
-                            pts2, indices2, mask2 = map_range_2_pc(d2, fx2, fy2, cx2, cy2, h2, center, stand, thresh=5)
 
-                            full_pc = np.hstack([pts1, pts2])
-                            full_pc = full_pc[[1, 2, 0], :]
+                            pts2, indices2, mask2 = map_range_2_pc(d2, fx2, fy2, cx2, cy2, h2, center, stand, thresh=5)
 
                             skel = skel_jnt.T
                             jnt = np.reshape(skel[int(im_mc[2, i]) + 1, :], (35, 3)).T
-                            # plot_basic_object(full_pc, jnt)
 
-                            out_pc_name = os.path.join(OUT_PC_DIR, 'sub_%02d_act_%02d_rec_%02d_cap_%05d.pkl' % (sub, act, rec, i))
-                            out_gt_name = os.path.join(OUT_GT_DIR, 'sub_%02d_act_%02d_rec_%02d_cap_%05d.pkl' % (sub, act, rec, i))
+                            # For combined PC
+                            # out_pc_name = os.path.join(OUT_PC_DIR,
+                            #                            'sub_%02d_act_%02d_rec_%02d_cap_%05d.pkl' % (
+                            #                            sub, act, rec, i))
 
-                            pickle.dump(full_pc, open(out_pc_name, 'wb'))
-                            pickle.dump(out_gt_name, open(out_gt_name, 'wb'))
+                            # For single view
+                            out_pc1_name = os.path.join(OUT_PC1_DIR,
+                                                       'sub_%02d_act_%02d_rec_%02d_cap_cam01_%05d.pkl' % (
+                                                       sub, act, rec, i))
+
+                            out_pc2_name = os.path.join(OUT_PC2_DIR,
+                                                        'sub_%02d_act_%02d_rec_%02d_cap_cam02_%05d.pkl' % (
+                                                            sub, act, rec, i))
+
+                            # To store the GT Joint locations
+                            # out_gt_name = os.path.join(OUT_GT_DIR,
+                            #                            'sub_%02d_act_%02d_rec_%02d_cap_%05d.pkl' % (
+                            #                            sub, act, rec, i))
+
+                            # pickle.dump(jnt, open(out_gt_name, 'wb'))
+                            # plot_basic_object(pts1[[1, 2, 0], :], jnt)
+                            # plot_basic_object(pts2[[1, 2, 0], :], jnt)
+
+                            pickle.dump(pts1[[1, 2, 0], :], open(out_pc1_name, 'wb'))
+                            pickle.dump(pts2[[1, 2, 0], :], open(out_pc2_name, 'wb'))
+
+                            # full_pc = np.hstack([pts1, pts2])
+                            # full_pc = full_pc[[1, 2, 0], :]
+                            #
+                            # pickle.dump(full_pc, open(out_pc_name, 'wb'))
 
                         except (IndexError, IOError) as ee:
                             print '\nNumber ' + str(i) + ' image is empty!'
