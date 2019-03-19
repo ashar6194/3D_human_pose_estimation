@@ -9,6 +9,8 @@ import os
 from scipy import io as sio
 from transformations import rotation_matrix
 from ubc_args import args
+from tqdm import tqdm
+
 # from visualization_msgs.msg import Marker
 # from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
 # from std_msgs.msg import Header, ColorRGBA
@@ -16,8 +18,6 @@ from ubc_args import args
 # # from utils import xyzToPcl
 # from cv_bridge import CvBridge, CvBridgeError
 # from ros_viz import pose_viz
-
-
 
 class generate_pc():
 
@@ -34,6 +34,28 @@ class generate_pc():
     xmap = np.flip(xmap, axis=-1)
 
     return xmap, ymap
+
+  def get_rot_mat(self, rot, trans):
+    xaxis, yaxis, zaxis = [1, 0, 0], [0, 1, 0], [0, 0, 1]
+    if (rot[0] > 0):
+      rotyx = 180.0 - rot[0]
+    else:
+      rotyx = (-rot[0])
+
+    rotyy = rot[1]
+
+    if (trans[0] * trans[2]) > 0:
+      if rotyy < 0:
+        rotyy = -rotyy
+      else:
+        rotyy = -180 + rotyy
+    else:
+      if rotyy < 0:
+        rotyy = -180 + rotyy
+      else:
+        rotyy = -rotyy
+    rot_mat = np.dot(rotation_matrix(0, zaxis), np.dot(rotation_matrix(math.radians(rotyy), yaxis), rotation_matrix(math.radians(rotyx), xaxis)))
+    return rot_mat
 
   def dp_2_pc(self, depth_img, xmap, ymap, trans, rot):
 
@@ -88,26 +110,31 @@ class generate_pc():
 
   def __init__(self):
     # rospy.init_node('pcl2_pub_example')
-    self.instance_list = sorted(glob.glob('%s*/groundtruth.mat' % args.root_dir))
+    self.instance_list = sorted(glob.glob('%s*/groundtruth.mat' % args.test_dir))
     self.test_gt_list = sorted(glob.glob('%s*/gt_poses.pkl' % args.test_dir))
     self.test_pred_list = sorted(glob.glob('%s*/pred_%s_%s.pkl' % (args.test_dir, args.model_name, args.cam_type)))
-    self.pose_list = sorted(glob.glob('%s*/gt_poses.pkl' % args.root_dir))
+    self.pose_list = sorted(glob.glob('%s*/gt_poses.pkl' % args.test_dir))
 
     # self.pub_cloud = rospy.Publisher("/pcl_msg", PointCloud2, queue_size=100)
     # self.im_publisher = rospy.Publisher('dp_image', Image, queue_size=50)
     # self.bridge = CvBridge()
-
     self.parse_ubc_hard()
-
 
   def parse_ubc_hard(self):
     mapper = '/home/mcao/Documents/human_pose_estimation/ubc_matlab/metadata/mapper.mat'
     mapp = sio.loadmat(mapper)
     xmap, ymap = self.transform_mapper(mapp)
+    output_trans_dir = '/data/UBC_hard/test_cam_params/'
 
-    for array_idx, (pose_array, instance) in enumerate(zip(self.pose_list, self.instance_list)):
+    if not os.path.exists(output_trans_dir):
+      os.makedirs(output_trans_dir)
+
+    for array_idx, (pose_array, instance) in tqdm(enumerate(zip(self.pose_list, self.instance_list))):
       mat_gt_file = sio.loadmat(instance)
       cams = mat_gt_file['cameras'][0][0][0][0][0][0][0]
+      cam_1 = mat_gt_file['cameras'][0][0][0][0][0][0][0]
+      cam_2 = mat_gt_file['cameras'][0][0][1][0][0][0][0]
+      cam_3 = mat_gt_file['cameras'][0][0][2][0][0][0][0]
 
       pl_name = pose_array.split('/')[:-1]
       pl_name_im = '/'.join(pl_name) + '/images/depthRender/Cam1'
@@ -115,23 +142,40 @@ class generate_pc():
       pkl_array = pickle.load(open(pose_array, 'rb'))
 
       for idx in range(1001):
+
         translation = np.squeeze(cams[idx][0][0][0])
         rotation = np.squeeze(cams[idx][0][0][1])
         pose = pkl_array[idx, ]
 
+        trans_1 = np.squeeze(cam_1[idx][0][0][0])
+        rot_1 = np.squeeze(cam_1[idx][0][0][1])
+
+        trans_2 = np.squeeze(cam_2[idx][0][0][0])
+        rot_2 = np.squeeze(cam_2[idx][0][0][1])
+
+        trans_3 = np.squeeze(cam_3[idx][0][0][0])
+        rot_3 = np.squeeze(cam_3[idx][0][0][1])
+
+        r1 = self.get_rot_mat(rot_1, trans_1)
+        r2 = self.get_rot_mat(rot_2, trans_2)
+        r3 = self.get_rot_mat(rot_3, trans_3)
+
+        transform_dict = {'r1': r1, 'r2': r2, 'r3': r3, 't1': trans_1, 't2': trans_2, 't3': trans_3}
+
+        outfile_name = os.path.join(output_trans_dir, 'sub_%02d_param_%5d.pkl' % (array_idx, idx))
+        pickle.dump(transform_dict, open(outfile_name, 'wb'))
+
         # self.publish_pose(pose / 100.0, array_idx, idx, data_mode='GT')
+        # im_name = os.path.join(pl_name_im, 'mayaProject.%06d.png' % (idx + 1))
+        # img = cv2.imread(im_name, cv2.IMREAD_UNCHANGED)
 
-        im_name = os.path.join(pl_name_im, 'mayaProject.%06d.png' % (idx + 1))
-        img = cv2.imread(im_name, cv2.IMREAD_UNCHANGED)
-
-        pts = self.dp_2_pc(img, xmap, ymap, translation, rotation)
+        # pts = self.dp_2_pc(img, xmap, ymap, translation, rotation)
         # pcl = PointCloud2()
 
         # pcl_msg = xyzToPcl(pcl, pts)
         # self.pub_cloud.publish(pcl_msg)
         # self.im_publisher.publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
-
-        print img.shape, pts.shape
+        # print img.shape, pts.shape
 
 
 def main():

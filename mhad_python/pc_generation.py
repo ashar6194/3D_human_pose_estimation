@@ -84,9 +84,9 @@ def extract_features_labelled(drc, config_file, dir_labels, mhad_color_map, subj
                             # pickle.dump(jnt, open(out_gt_name, 'wb'))
                             # plot_basic_object(pts1[[1, 2, 0], :], jnt)
                             # plot_basic_object(pts2[[1, 2, 0], :], jnt)
-
-                            pickle.dump(pts1[[1, 2, 0], :], open(out_pc1_name, 'wb'))
-                            pickle.dump(pts2[[1, 2, 0], :], open(out_pc2_name, 'wb'))
+                            #
+                            # pickle.dump(pts1[[1, 2, 0], :], open(out_pc1_name, 'wb'))
+                            # pickle.dump(pts2[[1, 2, 0], :], open(out_pc2_name, 'wb'))
 
                             # full_pc = np.hstack([pts1, pts2])
                             # full_pc = full_pc[[1, 2, 0], :]
