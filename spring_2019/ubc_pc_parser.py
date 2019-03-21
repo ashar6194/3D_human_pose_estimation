@@ -125,6 +125,7 @@ class generate_pc():
     mapp = sio.loadmat(mapper)
     xmap, ymap = self.transform_mapper(mapp)
     output_trans_dir = '/data/UBC_hard/test_cam_params/'
+    translist = []
 
     if not os.path.exists(output_trans_dir):
       os.makedirs(output_trans_dir)
@@ -161,9 +162,7 @@ class generate_pc():
         r3 = self.get_rot_mat(rot_3, trans_3)
 
         transform_dict = {'r1': r1, 'r2': r2, 'r3': r3, 't1': trans_1, 't2': trans_2, 't3': trans_3}
-
-        outfile_name = os.path.join(output_trans_dir, 'sub_%02d_param_%5d.pkl' % (array_idx, idx))
-        pickle.dump(transform_dict, open(outfile_name, 'wb'))
+        translist.append(transform_dict)
 
         # self.publish_pose(pose / 100.0, array_idx, idx, data_mode='GT')
         # im_name = os.path.join(pl_name_im, 'mayaProject.%06d.png' % (idx + 1))
@@ -176,6 +175,9 @@ class generate_pc():
         # self.pub_cloud.publish(pcl_msg)
         # self.im_publisher.publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
         # print img.shape, pts.shape
+
+    outfile_name = os.path.join(output_trans_dir, 'cam_params.pkl')
+    pickle.dump(translist, open(outfile_name, 'wb'))
 
 
 def main():

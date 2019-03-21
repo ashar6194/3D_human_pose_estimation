@@ -22,6 +22,7 @@ def train(train_filename, train_ckpt, train_logs, ckpt_dir):
   images, labels = inputs(FLAGS.batch, train_filename)
   tf.summary.image('labels', labels)
   one_hot_labels = classifier.one_hot(labels)
+
   autoencoder = utils.get_autoencoder(config.autoencoder, config.working_dataset, config.strided)
   logits = autoencoder.inference(images)
 
